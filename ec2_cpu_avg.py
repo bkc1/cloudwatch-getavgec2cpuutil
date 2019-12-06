@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
-from sys import argv
+import sys
 import boto3 
 import argparse
 import statistics
+sys.tracebacklimit = 0
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-r','--region', help='AWS region', required=True)
@@ -43,13 +44,15 @@ response = cloudwatch.get_metric_data(
     EndTime=f"{end}",
 )
 
-# Parse CPUutil metric values in array 
+# Parse CPUutil metric values in array, unless empty 
 values_array = response['MetricDataResults'][0]['Values']
+
+if not values_array:
+  print(f"No metric data found for {instance}:")
 
 # Calculated average from array of 1hr datapoints
 cpu_util = (statistics.mean(values_array))
 rounded =  str(round(cpu_util, 3))
 
-output = f"The CPU utilization for EC2 instance {instance} in {region} was {rounded}% between {start} & {end}"   
-print(output)
+print(f"{instance} average CPU utilization: {rounded}%")
 
